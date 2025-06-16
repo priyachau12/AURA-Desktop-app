@@ -1,13 +1,1183 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura - AI Desktop Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Bot Section - 30% */
+        .bot-section {
+            width: 30%;
+            background: linear-gradient(180deg, #1e1e3f 0%, #2a2a5a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-right: 2px solid #3a3a6a;
+        }
+
+        .bot-avatar {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .bot-avatar::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            animation: rotate 4s linear infinite;
+            opacity: 0.3;
+        }
+
+        .bot-face {
+            font-size: 4rem;
+            animation: blink 3s infinite;
+        }
+
+        .bot-name {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .bot-status {
+            font-size: 1rem;
+            color: #a0a0ff;
+            margin-bottom: 20px;
+        }
+
+        .voice-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .voice-btn {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .voice-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
+        }
+
+        .voice-btn.listening {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            animation: pulse 1s infinite;
+        }
+
+        /* Content Section - 70% */
+        .content-section {
+            width: 70%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .content-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            color: #a0a0ff;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+        }
+
+        /* Bottom Tabs */
+        .bottom-tabs {
+            height: 80px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .tab-icon {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .tab-label {
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .file-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .file-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .file-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .music-player {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .music-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .music-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .music-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            width: 30%;
+            transition: width 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes blink {
+            0%, 90% { opacity: 1; }
+            95% { opacity: 0.1; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-container {
+            max-height: 400px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .chat-message.user {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            margin-left: auto;
+        }
+
+        .chat-message.bot {
+            background: rgba(255, 255, 255, 0.1);
+            margin-right: auto;
+        }
+
+        .alarm-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .alarm-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .alarm-time {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .alarm-label {
+            color: #a0a0ff;
+        }
+
+        .delete-btn {
+            background: #ff6b6b;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Bot Section - 30% -->
+        <div class="bot-section">
+            <div class="bot-avatar">
+                <div class="bot-face">🤖</div>
+            </div>
+            <div class="bot-name">AURA</div>
+            <div class="bot-status" id="botStatus">Ready to assist you</div>
+            <div class="voice-controls">
+                <button class="voice-btn" id="micBtn" title="Start Voice Command">🎤</button>
+                <button class="voice-btn" id="stopBtn" title="Stop Listening">⏹️</button>
+            </div>
+        </div>
+
+        <!-- Content Section - 70% -->
+        <div class="content-section">
+            <div class="header">
+                <div class="header-title" id="headerTitle">Welcome to Aura</div>
+                <div class="header-controls">
+                    <button class="header-btn" onclick="minimizeApp()">−</button>
+                    <button class="header-btn" onclick="maximizeApp()">□</button>
+                    <button class="header-btn" onclick="closeApp()">×</button>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <!-- LinkedIn Post Tab -->
+                <div class="tab-content active" id="linkedin">
+                    <div class="content-card">
+                        <div class="content-title">📝 Create LinkedIn Post</div>
+                        <div class="form-group">
+                            <label class="form-label">Post Content</label>
+                            <textarea class="form-textarea" id="linkedinContent" placeholder="What's on your mind? Share your thoughts with your network..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Add Image/Media (Optional)</label>
+                            <input type="file" class="form-input" id="linkedinMedia" accept="image/*,video/*">
+                        </div>
+                        <button class="btn" onclick="createLinkedInPost()">📤 Create Post</button>
+                        <button class="btn btn-secondary" onclick="clearLinkedInForm()">🗑️ Clear</button>
+                    </div>
+                </div>
+
+                <!-- Email Tab -->
+                <div class="tab-content" id="email">
+                    <div class="content-card">
+                        <div class="content-title">📧 Send Email</div>
+                        <div class="form-group">
+                            <label class="form-label">To</label>
+                            <input type="email" class="form-input" id="emailTo" placeholder="recipient@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Subject</label>
+                            <input type="text" class="form-input" id="emailSubject" placeholder="Email subject">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Message</label>
+                            <textarea class="form-textarea" id="emailBody" placeholder="Type your message here..."></textarea>
+                        </div>
+                        <button class="btn" onclick="sendEmail()">📤 Send Email</button>
+                        <button class="btn btn-secondary" onclick="clearEmailForm()">🗑️ Clear</button>
+                    </div>
+                </div>
+
+                <!-- Alarms Tab -->
+                <div class="tab-content" id="alarms">
+                    <div class="content-card">
+                        <div class="content-title">⏰ Alarm & Reminders</div>
+                        <div class="form-group">
+                            <label class="form-label">Time</label>
+                            <input type="time" class="form-input" id="alarmTime">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Label</label>
+                            <input type="text" class="form-input" id="alarmLabel" placeholder="Alarm label">
+                        </div>
+                        <button class="btn" onclick="setAlarm()">⏰ Set Alarm</button>
+                        
+                        <div class="alarm-list" id="alarmList">
+                            <!-- Sample alarms -->
+                            <div class="alarm-item">
+                                <div>
+                                    <div class="alarm-time">09:00 AM</div>
+                                    <div class="alarm-label">Morning Meeting</div>
+                                </div>
+                                <button class="delete-btn" onclick="deleteAlarm(this)">🗑️</button>
+                            </div>
+                            <div class="alarm-item">
+                                <div>
+                                    <div class="alarm-time">06:00 PM</div>
+                                    <div class="alarm-label">Workout Time</div>
+                                </div>
+                                <button class="delete-btn" onclick="deleteAlarm(this)">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Music Tab -->
+                <div class="tab-content" id="music">
+                    <div class="content-card">
+                        <div class="content-title">🎵 Music Player</div>
+                        <div class="music-player">
+                            <div style="font-size: 3rem; margin-bottom: 15px;">🎧</div>
+                            <div style="font-size: 1.2rem; margin-bottom: 5px;" id="currentTrack">No track selected</div>
+                            <div style="color: #a0a0ff;" id="currentArtist">Select music to play</div>
+                            
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="musicProgress"></div>
+                            </div>
+                            
+                            <div class="music-controls">
+                                <button class="music-btn" onclick="previousTrack()">⏮️</button>
+                                <button class="music-btn" id="playPauseBtn" onclick="togglePlayPause()">▶️</button>
+                                <button class="music-btn" onclick="nextTrack()">⏭️</button>
+                                <button class="music-btn" onclick="shuffleMusic()">🔀</button>
+                            </div>
+                            
+                            <div class="form-group" style="margin-top: 20px;">
+                                <input type="file" class="form-input" id="musicFile" accept="audio/*" onchange="loadMusic()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- YouTube Tab -->
+                <div class="tab-content" id="youtube">
+                    <div class="content-card">
+                        <div class="content-title">📺 YouTube Player</div>
+                        <div class="form-group">
+                            <label class="form-label">YouTube URL or Search</label>
+                            <input type="text" class="form-input" id="youtubeUrl" placeholder="Enter YouTube URL or search term">
+                        </div>
+                        <button class="btn" onclick="playYouTube()">▶️ Play Video</button>
+                        <button class="btn btn-secondary" onclick="searchYouTube()">🔍 Search</button>
+                        
+                        <div style="margin-top: 20px; text-align: center;">
+                            <div id="youtubePlayer" style="background: rgba(255,255,255,0.1); border-radius: 10px; padding: 40px; color: #a0a0ff;">
+                                📺 YouTube player will appear here
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Tab -->
+                <div class="tab-content" id="chat">
+                    <div class="content-card">
+                        <div class="content-title">💬 Ask Questions</div>
+                        <div class="chat-container" id="chatContainer">
+                            <div class="chat-message bot">
+                                <strong>Aura:</strong> Hello! I'm here to help. What would you like to know?
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-input" id="chatInput" placeholder="Ask me anything..." onkeypress="handleChatEnter(event)">
+                        </div>
+                        <button class="btn" onclick="sendMessage()">📤 Send</button>
+                        <button class="btn btn-secondary" onclick="clearChat()">🗑️ Clear Chat</button>
+                    </div>
+                </div>
+
+                <!-- File Operations Tab -->
+                <div class="tab-content" id="files">
+                    <div class="content-card">
+                        <div class="content-title">📁 File & Folder Operations</div>
+                        <div style="margin-bottom: 20px;">
+                            <button class="btn" onclick="createNewFile()">📄 New File</button>
+                            <button class="btn" onclick="createNewFolder()">📁 New Folder</button>
+                            <button class="btn btn-secondary" onclick="deleteSelected()">🗑️ Delete</button>
+                            <button class="btn btn-success" onclick="refreshFiles()">🔄 Refresh</button>
+                        </div>
+                        
+                        <div class="file-grid" id="fileGrid">
+                            <!-- Sample files and folders -->
+                            <div class="file-item" onclick="selectFile(this)">
+                                <div class="file-icon">📁</div>
+                                <div>Documents</div>
+                            </div>
+                            <div class="file-item" onclick="selectFile(this)">
+                                <div class="file-icon">📁</div>
+                                <div>Downloads</div>
+                            </div>
+                            <div class="file-item" onclick="selectFile(this)">
+                                <div class="file-icon">📄</div>
+                                <div>report.docx</div>
+                            </div>
+                            <div class="file-item" onclick="selectFile(this)">
+                                <div class="file-icon">🖼️</div>
+                                <div>image.png</div>
+                            </div>
+                            <div class="file-item" onclick="selectFile(this)">
+                                <div class="file-icon">🎵</div>
+                                <div>song.mp3</div>
+                            </div>
+                            <div class="file-item" onclick="selectFile(this)">
+                                <div class="file-icon">📹</div>
+                                <div>video.mp4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Tabs -->
+            <div class="bottom-tabs">
+                <div class="tab active" onclick="switchTab('linkedin', this)">
+                    <div class="tab-icon">📝</div>
+                    <div class="tab-label">LinkedIn</div>
+                </div>
+                <div class="tab" onclick="switchTab('email', this)">
+                    <div class="tab-icon">📧</div>
+                    <div class="tab-label">Email</div>
+                </div>
+                <div class="tab" onclick="switchTab('alarms', this)">
+                    <div class="tab-icon">⏰</div>
+                    <div class="tab-label">Alarms</div>
+                </div>
+                <div class="tab" onclick="switchTab('music', this)">
+                    <div class="tab-icon">🎵</div>
+                    <div class="tab-label">Music</div>
+                </div>
+                <div class="tab" onclick="switchTab('youtube', this)">
+                    <div class="tab-icon">📺</div>
+                    <div class="tab-label">YouTube</div>
+                </div>
+                <div class="tab" onclick="switchTab('chat', this)">
+                    <div class="tab-icon">💬</div>
+                    <div class="tab-label">Questions</div>
+                </div>
+                <div class="tab" onclick="switchTab('files', this)">
+                    <div class="tab-icon">📁</div>
+                    <div class="tab-label">Files</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isListening = false;
+        let isPlaying = false;
+        let currentMusic = null;
+
+        // Tab switching functionality
+        function switchTab(tabName, tabElement) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            tabElement.classList.add('active');
+            
+            // Update header title
+            const titles = {
+                linkedin: 'LinkedIn Post Creator',
+                email: 'Email Composer',
+                alarms: 'Alarm & Reminders',
+                music: 'Music Player',
+                youtube: 'YouTube Player',
+                chat: 'AI Assistant Chat',
+                files: 'File Manager'
+            };
+            document.getElementById('headerTitle').textContent = titles[tabName] || 'Aura Assistant';
+        }
+
+        // Voice control functions
+        document.getElementById('micBtn').addEventListener('click', function() {
+            if (!isListening) {
+                startListening();
+            }
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', function() {
+            if (isListening) {
+                stopListening();
+            }
+        });
+
+        function startListening() {
+            isListening = true;
+            document.getElementById('micBtn').classList.add('listening');
+            document.getElementById('botStatus').textContent = 'Listening...';
+            // Here you would integrate with speech recognition API
+        }
+
+        function stopListening() {
+            isListening = false;
+            document.getElementById('micBtn').classList.remove('listening');
+            document.getElementById('botStatus').textContent = 'Ready to assist you';
+        }
+
+        // LinkedIn functions
+        function createLinkedInPost() {
+            const content = document.getElementById('linkedinContent').value;
+            if (content.trim()) {
+                alert('LinkedIn post would be created with content: ' + content);
+                // Here you would integrate with LinkedIn API
+            } else {
+                alert('Please enter some content for your post');
+            }
+        }
+
+        function clearLinkedInForm() {
+            document.getElementById('linkedinContent').value = '';
+            document.getElementById('linkedinMedia').value = '';
+        }
+
+        // Email functions
+        function sendEmail() {
+            const to = document.getElementById('emailTo').value;
+            const subject = document.getElementById('emailSubject').value;
+            const body = document.getElementById('emailBody').value;
+            
+            if (to && subject && body) {
+                alert(`Email would be sent to: ${to}\nSubject: ${subject}`);
+                // Here you would integrate with email API
+            } else {
+                alert('Please fill in all email fields');
+            }
+        }
+
+        function clearEmailForm() {
+            document.getElementById('emailTo').value = '';
+            document.getElementById('emailSubject').value = '';
+            document.getElementById('emailBody').value = '';
+        }
+
+        // Alarm functions
+        function setAlarm() {
+            const time = document.getElementById('alarmTime').value;
+            const label = document.getElementById('alarmLabel').value;
+            
+            if (time && label) {
+                const alarmList = document.getElementById('alarmList');
+                const alarmItem = document.createElement('div');
+                alarmItem.className = 'alarm-item';
+                alarmItem.innerHTML = `
+                    <div>
+                        <div class="alarm-time">${time}</div>
+                        <div class="alarm-label">${label}</div>
+                    </div>
+                    <button class="delete-btn" onclick="deleteAlarm(this)">🗑️</button>
+                `;
+                alarmList.appendChild(alarmItem);
+                
+                document.getElementById('alarmTime').value = '';
+                document.getElementById('alarmLabel').value = '';
+            } else {
+                alert('Please set both time and label for the alarm');
+            }
+        }
+
+        function deleteAlarm(button) {
+            button.parentElement.remove();
+        }
+
+        // Music functions
+        function togglePlayPause() {
+            const button = document.getElementById('playPauseBtn');
+            if (isPlaying) {
+                button.textContent = '▶️';
+                isPlaying = false;
+            } else {
+                button.textContent = '⏸️';
+                isPlaying = true;
+            }
+        }
+
+        function previousTrack() {
+            alert('Previous track functionality would be implemented');
+        }
+
+        function nextTrack() {
+            alert('Next track functionality would be implemented');
+        }
+
+        function shuffleMusic() {
+            alert('Shuffle functionality would be implemented');
+        }
+
+        function loadMusic() {
+            const file = document.getElementById('musicFile').files[0];
+            if (file) {
+                document.getElementById('currentTrack').textContent = file.name;
+                document.getElementById('currentArtist').textContent = 'Local File';
+            }
+        }
+
+        // YouTube functions
+        function playYouTube() {
+            const url = document.getElementById('youtubeUrl').value;
+            if (url) {
+                document.getElementById('youtubePlayer').innerHTML = `
+                    <div style="color: #4ecdc4;">▶️ Playing: ${url}</div>
+                    <div style="margin-top: 10px; color: #a0a0ff;">YouTube player would load here</div>
+                `;
+            } else {
+                alert('Please enter a YouTube URL');
+            }
+        }
+
+        function searchYouTube() {
+            const query = document.getElementById('youtubeUrl').value;
+            if (query) {
+                alert(`Searching YouTube for: ${query}`);
+                // Here you would integrate with YouTube API
+            } else {
+                alert('Please enter a search term');
+            }
+        }
+
+        // Chat functions
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                const chatContainer = document.getElementById('chatContainer');
+                
+                // Add user message
+                const userMessage = document.createElement('div');
+                userMessage.className = 'chat-message user';
+                userMessage.innerHTML = `<strong>You:</strong> ${message}`;
+                chatContainer.appendChild(userMessage);
+                
+                // Simulate bot response
+                setTimeout(() => {
+                    const botMessage = document.createElement('div');
+                    botMessage.className = 'chat-message bot';
+                    botMessage.innerHTML = `<strong>Aura:</strong> I understand you said "${message}". How can I help you with that?`;
+                    chatContainer.appendChild(botMessage);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 1000);
+                
+                input.value = '';
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+
+        function handleChatEnter(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function clearChat() {
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = `
+                <div class="chat-message bot">
+                    <strong>Aura:</strong> Hello! I'm here to help. What would you like to know?
+                </div>
+            `;
+        }
+
+        // File operations functions
+        function createNewFile() {
+            const fileName = prompt('Enter file name:');
+            if (fileName) {
+                const fileGrid = document.getElementById('fileGrid');
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.onclick = () => selectFile(fileItem);
+                fileItem.innerHTML = `
+                    <div class="file-icon">📄</div>
+                    <div>${fileName}</div>
+                `;
+                fileGrid.appendChild(fileItem);
+            }
+        }
+
+        function createNewFolder() {
+            const folderName = prompt('Enter folder name:');
+            if (folderName) {
+                const fileGrid = document.getElementById('fileGrid');
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.onclick = () => selectFile(fileItem);
+                fileItem.innerHTML = `
+                    <div class="file-icon">📁</div>
+                    <div>${folderName}</div>
+                `;
+                fileGrid.appendChild(fileItem);
+            }
+        }
+
+        function selectFile(element) {
+            // Remove selection from all files
+            const fileItems = document.querySelectorAll('.file-item');
+            fileItems.forEach(item => item.classList.remove('selected'));
+            
+            // Add selection to clicked file
+            element.classList.add('selected');
+        }
+
+        function deleteSelected() {
+            const selected = document.querySelector('.file-item.selected');
+            if (selected) {
+                if (confirm('Are you sure you want to delete this item?')) {
+                    selected.remove();
+                }
+            } else {
+                alert('Please select a file or folder to delete');
+            }
+        }
+
+        function refreshFiles() {
+            alert('File list would be refreshed from the file system');
+            // Here you would integrate with file system API
+        }
+
+        // Window control functions
+        function minimizeApp() {
+            // Here you would integrate with Electron's window controls
+            alert('App would be minimized');
+        }
+
+        function maximizeApp() {
+            // Here you would integrate with Electron's window controls
+            alert('App would be maximized/restored');
+        }
+
+        function closeApp() {
+            if (confirm('Are you sure you want to close Aura?')) {
+                // Here you would integrate with Electron's window controls
+                alert('App would be closed');
+            }
+        }
+
+        // Additional utility functions
+        function updateBotStatus(status) {
+            document.getElementById('botStatus').textContent = status;
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'error' ? '#ff6b6b' : type === 'success' ? '#4ecdc4' : '#667eea'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            updateBotStatus('Ready to assist you');
+            
+            // Add some sample interactions
+            setTimeout(() => {
+                updateBotStatus('Say "Hello Aura" to get started');
+            }, 3000);
+            
+            // Add CSS for file selection
+            const style = document.createElement('style');
+            style.textContent = `
+                .file-item.selected {
+                    background: linear-gradient(45deg, #667eea, #764ba2) !important;
+                    transform: translateY(-2px);
+                }
+                
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+                
+                .music-progress {
+                    animation: musicProgress 3s linear infinite;
+                }
+                
+                @keyframes musicProgress {
+                    0% { width: 0%; }
+                    100% { width: 100%; }
+                }
+                
+                .voice-btn.recording {
+                    background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+                    animation: pulse 0.5s infinite alternate;
+                }
+                
+                .bot-avatar.speaking {
+                    animation: speaking 0.5s infinite alternate;
+                }
+                
+                @keyframes speaking {
+                    0% { transform: scale(1); }
+                    100% { transform: scale(1.1); }
+                }
+                
+                .content-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+                    transition: all 0.3s ease;
+                }
+                
+                .form-input:focus, .form-textarea:focus {
+                    outline: none;
+                    border-color: #667eea;
+                    box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+                }
+                
+                .tab-content {
+                    animation: fadeInUp 0.4s ease-out;
+                }
+                
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                
+                .loading {
+                    position: relative;
+                    overflow: hidden;
+                }
+                
+                .loading::after {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: -100%;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+                    animation: loading 1.5s infinite;
+                }
+                
+                @keyframes loading {
+                    0% { left: -100%; }
+                    100% { left: 100%; }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+
+        // Voice command processing (placeholder)
+        function processVoiceCommand(command) {
+            const lowerCommand = command.toLowerCase();
+            
+            if (lowerCommand.includes('linkedin')) {
+                switchTab('linkedin', document.querySelector('[onclick*="linkedin"]'));
+                updateBotStatus('LinkedIn tab opened');
+            } else if (lowerCommand.includes('email')) {
+                switchTab('email', document.querySelector('[onclick*="email"]'));
+                updateBotStatus('Email tab opened');
+            } else if (lowerCommand.includes('music')) {
+                switchTab('music', document.querySelector('[onclick*="music"]'));
+                updateBotStatus('Music player opened');
+            } else if (lowerCommand.includes('youtube')) {
+                switchTab('youtube', document.querySelector('[onclick*="youtube"]'));
+                updateBotStatus('YouTube player opened');
+            } else if (lowerCommand.includes('files') || lowerCommand.includes('folder')) {
+                switchTab('files', document.querySelector('[onclick*="files"]'));
+                updateBotStatus('File manager opened');
+            } else if (lowerCommand.includes('chat') || lowerCommand.includes('question')) {
+                switchTab('chat', document.querySelector('[onclick*="chat"]'));
+                updateBotStatus('Chat opened');
+            } else if (lowerCommand.includes('alarm')) {
+                switchTab('alarms', document.querySelector('[onclick*="alarms"]'));
+                updateBotStatus('Alarms opened');
+            } else {
+                updateBotStatus('Command not recognized');
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey || event.metaKey) {
+                switch(event.key) {
+                    case '1':
+                        event.preventDefault();
+                        switchTab('linkedin', document.querySelector('[onclick*="linkedin"]'));
+                        break;
+                    case '2':
+                        event.preventDefault();
+                        switchTab('email', document.querySelector('[onclick*="email"]'));
+                        break;
+                    case '3':
+                        event.preventDefault();
+                        switchTab('alarms', document.querySelector('[onclick*="alarms"]'));
+                        break;
+                    case '4':
+                        event.preventDefault();
+                        switchTab('music', document.querySelector('[onclick*="music"]'));
+                        break;
+                    case '5':
+                        event.preventDefault();
+                        switchTab('youtube', document.querySelector('[onclick*="youtube"]'));
+                        break;
+                    case '6':
+                        event.preventDefault();
+                        switchTab('chat', document.querySelector('[onclick*="chat"]'));
+                        break;
+                    case '7':
+                        event.preventDefault();
+                        switchTab('files', document.querySelector('[onclick*="files"]'));
+                        break;
+                }
+            }
+            
+            // Space bar for voice activation
+            if (event.code === 'Space' && !event.target.matches('input, textarea')) {
+                event.preventDefault();
+                if (!isListening) {
+                    startListening();
+                } else {
+                    stopListening();
+                }
+            }
+        });
+
+        // Context menu for files
+        document.addEventListener('contextmenu', function(event) {
+            if (event.target.closest('.file-item')) {
+                event.preventDefault();
+                // Here you would show a context menu
+                alert('Context menu would appear here with options like: Open, Rename, Delete, Properties');
+            }
+        });
+    </script>
+</body>
 </html>
